@@ -1,4 +1,4 @@
-import { Suspense, use } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -17,15 +17,13 @@ function parseFormat(title: string): string {
   return 'behavioral';
 }
 
-function SessionSkeleton() {
-  return (
-    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-      Loading session…
-    </div>
-  );
-}
-
-async function SessionContent({ id }: { id: string }) {
+// Async inner component — awaits params + Supabase calls inside the Suspense boundary
+async function SessionContent({
+  paramsPromise,
+}: {
+  paramsPromise: Promise<{ id: string }>;
+}) {
+  const { id } = await paramsPromise;
   const supabase = await createClient();
 
   const { data: session } = await supabase
@@ -88,11 +86,21 @@ async function SessionContent({ id }: { id: string }) {
   );
 }
 
-export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+// Static shell — no async, no awaits; passes the Promise into Suspense
+export default function SessionPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   return (
-    <Suspense fallback={<SessionSkeleton />}>
-      <SessionContent id={id} />
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+          Loading session…
+        </div>
+      }
+    >
+      <SessionContent paramsPromise={params} />
     </Suspense>
   );
 }
