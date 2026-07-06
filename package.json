@@ -7,7 +7,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "'": "file:../../../../../utils/supabase/server'",
     "@ai-sdk/anthropic": "^3.0.85",
     "@ai-sdk/react": "^3.0.210",
     "@monaco-editor/react": "^4.7.0",
