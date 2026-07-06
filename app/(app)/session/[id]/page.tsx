@@ -1,3 +1,4 @@
+import { Suspense, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -16,8 +17,15 @@ function parseFormat(title: string): string {
   return 'behavioral';
 }
 
-export default async function SessionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+function SessionSkeleton() {
+  return (
+    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+      Loading session…
+    </div>
+  );
+}
+
+async function SessionContent({ id }: { id: string }) {
   const supabase = await createClient();
 
   const { data: session } = await supabase
@@ -41,7 +49,6 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     return acc;
   }, {});
 
-  // Technical and system design are full-bleed — no outer padding wrapper
   if (format === 'technical') {
     return <TechnicalInterview sessionId={id} initialMessages={initialMessages} />;
   }
@@ -50,7 +57,6 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     return <SystemDesignInterview sessionId={id} initialMessages={initialMessages} />;
   }
 
-  // Scenario types (product-sense, case-study, leadership)
   if (format !== 'behavioral') {
     return (
       <ScenarioInterview
@@ -61,13 +67,10 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  // Behavioral — original chat layout
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold">{title}</h1>
-        </div>
+        <h1 className="text-lg font-bold">{title}</h1>
         <Link
           href="/dashboard"
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -82,5 +85,14 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         initialScores={initialScores}
       />
     </div>
+  );
+}
+
+export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return (
+    <Suspense fallback={<SessionSkeleton />}>
+      <SessionContent id={id} />
+    </Suspense>
   );
 }

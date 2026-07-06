@@ -1,10 +1,11 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Clock, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ProgressChart } from '@/components/progress-chart';
 import { Button } from '@/components/ui/button';
 
-export default async function Dashboard() {
+async function DashboardContent() {
   const supabase = await createClient();
 
   const { data: sessions } = await supabase
@@ -30,8 +31,6 @@ export default async function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
-
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -47,7 +46,6 @@ export default async function Dashboard() {
         </Button>
       </div>
 
-      {/* Score trend */}
       <section className="rounded-xl border border-border/60 bg-card p-6 space-y-4">
         <div>
           <h2 className="font-semibold">Score trend</h2>
@@ -58,10 +56,8 @@ export default async function Dashboard() {
         <ProgressChart data={series} />
       </section>
 
-      {/* Past sessions */}
       <section className="space-y-4">
         <h2 className="font-semibold">Past sessions</h2>
-
         {sessionList.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-12 text-center">
             <p className="text-muted-foreground text-sm mb-4">
@@ -101,5 +97,19 @@ export default async function Dashboard() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+          Loading dashboard…
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }
